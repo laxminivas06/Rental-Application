@@ -1,0 +1,64 @@
+{
+  "portions": [
+    {
+      "id": 1,
+      "type": "2BHK",
+      "name": "Portion 1",
+      "tenant_type": "Family",
+      "members": [
+        "Raj Sharma",
+        "Priya Sharma"
+      ],
+      "contact_number": "+919989860464",
+      "id_proofs": [
+        "1_20230922_123456_aadhar.pdf"
+      ],
+      "photos": [
+        "1_20230922_123501_living_room.jpg",
+        "1_20250922_080146_college_logo.png"
+      ],
+      "bills": {
+        "september 2023": {
+          "rent": 12000,
+          "water": 500,
+          "electricity": 1500,
+          "extra": 200,
+          "total": 14200
+        },
+        "September 2025": {
+          "rent": 2323.0,
+          "water": 12121.0,
+          "electricity": 12121.0,
+          "extra": 0.0,
+          "total": 26565.0
+        }
+      }
+    },
+    {
+      "id": 2,
+      "type": "1BHK",
+      "name": "Portion 2",
+      "tenant_type": "Bachelors",
+      "members": [
+        "Amit Singh",
+        "Vikram Patel"
+      ],
+      "contact_number": "+919989860464",
+      "id_proofs": [
+        "2_20230922_123456_pan.pdf"
+      ],
+      "photos": [
+        "2_20230922_123501_kitchen.jpg"
+      ],
+      "bills": {
+        "september 2023": {
+          "rent": 8000,
+          "water": 300,
+          "electricity": 1200,
+          "extra": 0,
+          "total": 9500
+        }
+      }
+    }
+  ]
+}

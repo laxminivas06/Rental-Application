@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="portion-detail-header">
+    <h2>{{ portion.name }} ({{ portion.type }})</h2>
+    <div class="header-actions">
+        <a href="{{ url_for('edit_portion', id=portion.id) }}" class="btn btn-edit">Edit</a>
+        <a href="{{ url_for('send_message', id=portion.id) }}" class="btn btn-message">
+            <i class="fab fa-whatsapp"></i> Send Message
+        </a>
+        <a href="{{ url_for('manage_bills', id=portion.id) }}" class="btn btn-bills">Manage Bills</a>
+    </div>
+</div>
+
+<div class="detail-grid">
+    <div class="detail-card">
+        <h3>Tenant Information</h3>
+        <p><strong>Type:</strong> {{ portion.tenant_type }}</p>
+        <p><strong>Members:</strong> {{ portion.members|join(', ') }}</p>
+        <p><strong>Contact:</strong> {{ portion.contact_number }}</p>
+    </div>
+
+    <div class="detail-card">
+        <h3>ID Proofs</h3>
+        {% if portion.id_proofs %}
+        <div class="file-list">
+            {% for proof in portion.id_proofs %}
+            <div class="file-item">
+                <i class="fas fa-file-pdf"></i>
+                <a href="{{ url_for('serve_id_proof', filename=proof) }}" target="_blank">Proof {{ loop.index }}</a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="no-items">No ID proofs uploaded</p>
+        {% endif %}
+        
+        <form method="POST" action="{{ url_for('upload_id_proof', id=portion.id) }}" enctype="multipart/form-data" class="upload-form">
+            <input type="file" name="id_proof" accept=".jpg,.jpeg,.png,.pdf" required>
+            <button type="submit" class="btn btn-small">Upload ID Proof</button>
+        </form>
+    </div>
+
+    <div class="detail-card">
+        <h3>Gallery</h3>
+        {% if portion.photos %}
+        <div class="gallery-preview">
+            {% for photo in portion.photos %}
+            <a href="{{ url_for('serve_gallery', filename=photo) }}" target="_blank">
+                <img src="{{ url_for('serve_gallery', filename=photo) }}" alt="Gallery image">
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="no-items">No photos uploaded</p>
+        {% endif %}
+        
+        <form method="POST" action="{{ url_for('upload_photo', id=portion.id) }}" enctype="multipart/form-data" class="upload-form">
+            <input type="file" name="photo" accept=".jpg,.jpeg,.png" required>
+            <button type="submit" class="btn btn-small">Upload Photo</button>
+        </form>
+    </div>
+
+    <div class="detail-card">
+        <h3>Recent Bills</h3>
+        {% if portion.bills %}
+        <div class="bills-preview">
+            {% for month, bill in portion.bills.items()|reverse %}
+            {% if loop.index <= 3 %}
+            <div class="bill-item">
+                <strong>{{ month|capitalize }}</strong>
+                <span>₹{{ bill.total }}</span>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="no-items">No bills generated</p>
+        {% endif %}
+        
+        <a href="{{ url_for('manage_bills', id=portion.id) }}" class="btn btn-small">View All Bills</a>
+    </div>
+</div>
+
+<div class="back-link">
+    <a href="{{ url_for('dashboard') }}">&larr; Back to Dashboard</a>
+</div>
+{% endblock %}

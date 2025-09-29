@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>{% if portion %}Edit{% else %}Add{% endif %} Portion</h2>
+
+<form method="POST" class="form" id="portionForm">
+    <div class="form-group">
+        <label for="floor">Floor:</label>
+        <select id="floor" name="floor" required onchange="updatePortionNumbers()">
+            <option value="">Select Floor</option>
+            <option value="Ground" {% if portion and portion.floor == 'Ground' %}selected{% endif %}>Ground Floor</option>
+            <option value="1" {% if portion and portion.floor == '1' %}selected{% endif %}>1st Floor</option>
+            <option value="2" {% if portion and portion.floor == '2' %}selected{% endif %}>2nd Floor</option>
+            <option value="3" {% if portion and portion.floor == '3' %}selected{% endif %}>3rd Floor</option>
+            <option value="Penthouse" {% if portion and portion.floor == 'Penthouse' %}selected{% endif %}>Penthouse</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="portion_no">Portion Number:</label>
+        <select id="portion_no" name="portion_no" required>
+            <option value="">Select Portion Number</option>
+            <!-- Options will be populated by JavaScript -->
+        </select>
+        <small id="portionHelp" class="form-text text-muted">Select an existing portion number or choose "Add New" to create a new one</small>
+    </div>
+
+    <div class="form-group" id="new_portion_no_group" style="display: none;">
+        <label for="new_portion_no">New Portion Number:</label>
+        <input type="text" id="new_portion_no" name="new_portion_no" readonly>
+    </div>
+
+    <div class="form-group">
+        <label for="type">Portion Type:</label>
+        <select id="type" name="type" required>
+            <option value="">Select Type</option>
+            <option value="1BHK" {% if portion and portion.type == '1BHK' %}selected{% endif %}>1BHK</option>
+            <option value="2BHK" {% if portion and portion.type == '2BHK' %}selected{% endif %}>2BHK</option>
+            <option value="3BHK" {% if portion and portion.type == '3BHK' %}selected{% endif %}>3BHK</option>
+            <option value="Single Room" {% if portion and portion.type == 'Single Room' %}selected{% endif %}>Single Room</option>
+            <option value="Room + Kitchen" {% if portion and portion.type == 'Room + Kitchen' %}selected{% endif %}>Room + Kitchen</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="name">Portion Name:</label>
+        <input type="text" id="name" name="name" value="{{ portion.name if portion }}" required>
+    </div>
+
+    <div class="form-group">
+        <label for="tenant_type">Tenant Type:</label>
+        <select id="tenant_type" name="tenant_type" required>
+            <option value="">Select Type</option>
+            <option value="Family" {% if portion and portion.tenant_type == 'Family' %}selected{% endif %}>Family</option>
+            <option value="Bachelors" {% if portion and portion.tenant_type == 'Bachelors' %}selected{% endif %}>Bachelors</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="members">Members (comma separated):</label>
+        <textarea id="members" name="members" required>{% if portion %}{{ portion.members|join(', ') }}{% endif %}</textarea>
+    </div>
+
+    <div class="form-group">
+        <label for="contact_number">Primary Contact Number:</label>
+        <input type="tel" id="contact_number" name="contact_number" value="{{ portion.contact_number if portion }}" required>
+    </div>
+
+    <div class="form-group">
+        <label for="contact_number_2">Secondary Contact Number:</label>
+        <input type="tel" id="contact_number_2" name="contact_number_2" value="{{ portion.contact_number_2 if portion }}">
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Save Portion</button>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+
+<script>
+function updatePortionNumbers() {
+    const floorSelect = document.getElementById('floor');
+    const portionNoSelect = document.getElementById('portion_no');
+    const newPortionNoGroup = document.getElementById('new_portion_no_group');
+    const newPortionNoInput = document.getElementById('new_portion_no');
+    const floor = floorSelect.value;
+    
+    // Clear existing options
+    portionNoSelect.innerHTML = '<option value="">Select Portion Number</option>';
+    newPortionNoGroup.style.display = 'none';
+    newPortionNoInput.value = '';
+    
+    if (!floor) {
+        return;
+    }
+    
+    // Get existing portions for this floor
+    fetch('/get_portions_by_floor?floor=' + floor)
+        .then(response => response.json())
+        .then(data => {
+            // Add existing portion numbers
+            if (data.portions && data.portions.length > 0) {
+                data.portions.forEach(portion => {
+                    const option = document.createElement('option');
+                    option.value = portion.portion_no;
+                    option.textContent = portion.portion_no;
+                    portionNoSelect.appendChild(option);
+                });
+            }
+            
+            // Add "Add New" option
+            const addNewOption = document.createElement('option');
+            addNewOption.value = 'new';
+            addNewOption.textContent = 'Add New Portion Number';
+            portionNoSelect.appendChild(addNewOption);
+            
+            // Add event listener for portion number selection
+            portionNoSelect.onchange = function() {
+                if (this.value === 'new') {
+                    newPortionNoGroup.style.display = 'block';
+                    // Generate next portion number
+                    let nextNumber = 1;
+                    if (data.portions && data.portions.length > 0) {
+                        const numbers = data.portions.map(p => {
+                            const match = p.portion_no.match(/\d+$/);
+                            return match ? parseInt(match[0]) : 0;
+                        });
+                        nextNumber = Math.max(...numbers) + 1;
+                    }
+                    
+                    // Set the new portion number based on floor
+                    if (floor === 'Ground') {
+                        newPortionNoInput.value = 'G' + nextNumber;
+                    } else if (floor === 'Penthouse') {
+                        newPortionNoInput.value = 'P' + nextNumber;
+                    } else {
+                        newPortionNoInput.value = floor + '/' + nextNumber;
+                    }
+                } else {
+                    newPortionNoGroup.style.display = 'none';
+                    newPortionNoInput.value = '';
+                }
+            };
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+}
+
+// Initialize on page load if editing
+{% if portion %}
+window.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('floor').dispatchEvent(new Event('change'));
+    
+    // Set the portion number after a delay to ensure options are loaded
+    setTimeout(function() {
+        const portionNoSelect = document.getElementById('portion_no');
+        portionNoSelect.value = '{{ portion.portion_no }}';
+    }, 500);
+});
+{% endif %}
+</script>
+{% endblock %}
